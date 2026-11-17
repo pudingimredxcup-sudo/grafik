@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Grafik — XAUUSD / US100</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0f1115;color:#c9ced6;font:13px/1.3 -apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}
+body{display:flex;flex-direction:column;height:100dvh}
+button,select,input{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:6px;padding:6px 8px;background:#151821;border-bottom:1px solid #232835}
+.seg{display:flex;border:1px solid #2c3240;border-radius:7px;overflow:hidden}
+.seg button{background:none;border:0;padding:6px 9px;cursor:pointer}
+.seg button.on{background:#2962ff;color:#fff}
+select{background:#1c2029;border:1px solid #2c3240;border-radius:7px;padding:5px 4px}
+#px{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.icon{background:#1c2029;border:1px solid #2c3240;border-radius:7px;padding:5px 9px;cursor:pointer}
+#status{padding:3px 8px;font-size:11px;color:#8a92a3;background:#12151c;min-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#status.err{color:#ff8a80;white-space:normal}
+#wrap{position:relative;flex:1;min-height:0;touch-action:none}
+#chart{position:absolute;inset:0}
+#ov{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:5}
+#legend{position:absolute;left:8px;top:6px;z-index:6;font-size:11px;pointer-events:none;font-variant-numeric:tabular-nums;color:#aab2c0}
+nav{display:flex;gap:4px;padding:6px;overflow-x:auto;background:#151821;border-top:1px solid #232835;padding-bottom:max(6px,env(safe-area-inset-bottom))}
+nav button{flex:0 0 auto;min-width:52px;background:#1c2029;border:1px solid #2c3240;border-radius:8px;padding:6px 6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px}
+nav button svg{width:20px;height:20px}
+nav button.on{background:#2962ff;border-color:#2962ff;color:#fff}
+nav .sep{flex:0 0 1px;background:#2c3240;margin:2px 2px}
+#colorDot{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid #fff4}
+.modal{position:fixed;inset:0;background:#000a;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal.hidden{display:none}
+.sheet{background:#171a22;width:100%;max-width:520px;max-height:90dvh;overflow:auto;border-radius:14px 14px 0 0;padding:14px 14px 20px}
+.sheet h3{margin:4px 0 10px;font-size:15px}
+.sheet label{display:block;margin:10px 0 4px;color:#9aa3b2;font-size:12px}
+.sheet input[type=text],.sheet textarea{width:100%;background:#0f1115;border:1px solid #2c3240;border-radius:8px;padding:8px}
+.sheet textarea{height:90px;font-size:11px}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0}
+.btn{background:#2962ff;border:0;border-radius:8px;padding:9px 14px;color:#fff;cursor:pointer}
+.btn.sec{background:#2a2f3a}
+.note{font-size:11px;color:#7d8696;margin-top:4px}
+a{color:#6ea0ff}
+</style>
+</head>
+<body>
+<header>
+  <div class="seg" id="syms"><button data-sym="XAUUSD">XAUUSD</button><button data-sym="US100">US100</button></div>
+  <select id="tf"></select>
+  <span id="px">—</span>
+  <button class="icon" id="btnRefresh" title="Yenile">⟳</button>
+  <button class="icon" id="btnSet" title="Ayarlar">⚙</button>
+</header>
+<div id="status"></div>
+<div id="wrap"><div id="chart"></div><canvas id="ov"></canvas><div id="legend"></div></div>
+<nav id="tools"></nav>
+
+<div class="modal hidden" id="settings"><div class="sheet">
+  <h3>Ayarlar</h3>
+  <div class="note">Veri (anahtarsız, canlı): XAUUSD → Binance XAUUSDT (spot altını izler), olmazsa Hyperliquid xyz:GOLD. US100 → Hyperliquid xyz:XYZ100 (Nasdaq-100 vadelisini izler, 7/24).</div>
+  <label>XAUUSD fiyat farkı (broker'ına göre)</label>
+  <input type="text" id="sOffX" inputmode="decimal" placeholder="0">
+  <label>US100 fiyat farkı (broker'ına göre)</label>
+  <input type="text" id="sOffN" inputmode="decimal" placeholder="0">
+  <div class="note">Bu kaynaklar broker CFD fiyatından sabit bir miktar sapabilir (US100'de vadeli primi yüzünden genelde daha belirgindir). Broker'ındaki fiyatla karşılaştır, farkı yaz (ör. -85). Tüm mumlara eklenir.</div>
+  <div class="row"><input type="checkbox" id="sE20"><span>EMA 20 (sarı)</span></div>
+  <div class="row"><input type="checkbox" id="sE50"><span>EMA 50 (mavi)</span></div>
+  <div class="row"><button class="btn" id="sSave">Kaydet</button><button class="btn sec" id="sClose">Kapat</button></div>
+  <label>Çizim yedeği (tüm semboller)</label>
+  <textarea id="sBackup" spellcheck="false"></textarea>
+  <div class="row"><button class="btn sec" id="sExport">Yedeği göster</button><button class="btn sec" id="sCopy">Kopyala</button><button class="btn sec" id="sImport">İçe aktar</button></div>
+  <div class="note" id="sStoreNote"></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.3.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="p1.js"></script>
+<script src="p2.js"></script>
+<script src="p3.js"></script>
+<script src="p4.js"></script>
+<script src="p5.js"></script>
+<script src="p6.js"></script>
+</body>
+</html>
