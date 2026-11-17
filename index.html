@@ -64,6 +64,11 @@ a{color:#6ea0ff}
   <div class="note">Bu kaynaklar broker CFD fiyatından sabit bir miktar sapabilir (US100'de vadeli primi yüzünden genelde daha belirgindir). Broker'ındaki fiyatla karşılaştır, farkı yaz (ör. -85). Tüm mumlara eklenir.</div>
   <div class="row"><input type="checkbox" id="sE20"><span>EMA 20 (sarı)</span></div>
   <div class="row"><input type="checkbox" id="sE50"><span>EMA 50 (mavi)</span></div>
+  <div class="row"><input type="checkbox" id="sNV"><span>Net Volume (grafiğin altında; Binance'te gerçek alış-satış deltası, diğerinde TradingView formülü)</span></div>
+  <label>Saat</label>
+  <select id="sTZ"><option value="UTC">UTC (TradingView grafiğinle aynı)</option><option value="local">Telefonun saati</option></select>
+  <label>FRVP satır sayısı ve Value Area %</label>
+  <div class="row"><input type="text" id="sRows" inputmode="numeric" style="width:90px"><input type="text" id="sVA" inputmode="numeric" style="width:90px"></div>
   <div class="row"><button class="btn" id="sSave">Kaydet</button><button class="btn sec" id="sClose">Kapat</button></div>
   <label>Çizim yedeği (tüm semboller)</label>
   <textarea id="sBackup" spellcheck="false"></textarea>
@@ -72,11 +77,13 @@ a{color:#6ea0ff}
 </div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.3.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="p1.js"></script>
-<script src="p2.js"></script>
+<script src="a1.js"></script>
+<script src="a2.js"></script>
 <script src="p3.js"></script>
-<script src="p4.js"></script>
-<script src="p5.js"></script>
-<script src="p6.js"></script>
+<script src="a4.js"></script>
+<script src="a5.js"></script>
+<script src="a7.js"></script>
+<script src="a8.js"></script>
+<script src="a6.js"></script>
 </body>
 </html>
