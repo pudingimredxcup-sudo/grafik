@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>XYZ100 Likidite Haritası</title>
+<link rel="stylesheet" href="of.css">
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="row">
+    <a id="toChart" class="lnk" href="./" title="Grafiğe dön">📈 Grafik</a>
+    <span id="dot"></span><span id="title">XYZ100</span>
+    <button id="go" class="pri">Bağlan</button>
+    <button id="demo">Demo</button>
+    <select id="view" aria-label="Görünüm"><option value="map" selected>Harita</option><option value="fp">Footprint</option></select>
+    <select id="win" aria-label="Zaman penceresi">
+      <option value="10">10 sn</option><option value="30">30 sn</option>
+      <option value="60">1 dk</option><option value="180" selected>3 dk</option>
+      <option value="300">5 dk</option><option value="600">10 dk</option><option value="1800">30 dk</option>
+    </select>
+    <button id="bell" aria-label="Olaylar">🔔 <span id="evn">0</span></button>
+    <button id="gear" aria-label="Ayarlar">⚙</button>
+    <div id="stats"></div>
+    <div id="status">Hazır. "Bağlan"a bas. Yatay ekran daha geniş görünür.</div>
+  </div>
+  <div id="set">
+    <div class="grp"><b>Görünüm</b>
+      <label>Palet <select id="pal"><option value="pro" selected>Pro (lacivert→altın)</option><option value="klasik">Bookmap klasik</option><option value="gri">Gri</option></select></label>
+      <label>Baloncuk <select id="bstyle"><option value="3d" selected>3D geçiş</option><option value="pie">2D pasta</option></select></label>
+      <label>Boy <input id="bsize" type="range" min="0.5" max="2" step="0.05" value="1"></label>
+      <label>Min baloncuk <input id="minb" type="number" step="0.1" min="0" value="0"></label>
+      <label>Üst kesim <input id="upper" type="range" min="85" max="99.8" step="0.1" value="99"><span id="upperV"></span></label>
+      <label>Alt kesim <input id="lower" type="range" min="0" max="90" step="1" value="45"><span id="lowerV"></span></label>
+      <label>Hacim çubuğu <select id="vbar"><option value="0" selected>Otomatik</option><option value="1">1 sn</option><option value="5">5 sn</option><option value="15">15 sn</option><option value="60">1 dk</option></select></label>
+      <label><input id="coarse" type="checkbox" checked> Geniş derinlik</label>
+      <label>Footprint çubuğu <select id="fptf"><option value="0" selected>Otomatik</option><option value="1">1 sn</option><option value="5">5 sn</option><option value="15">15 sn</option><option value="30">30 sn</option><option value="60">1 dk</option><option value="300">5 dk</option></select></label>
+    </div>
+    <div class="grp"><b>Seviyeler</b>
+      <label><input id="prof" type="checkbox" checked> Hacim profili</label>
+      <label><input id="showVA" type="checkbox" checked> POC / VAH / VAL</label>
+      <label><input id="showVW" type="checkbox" checked> VWAP</label>
+      <label><input id="showBand" type="checkbox" checked> VWAP ±1σ ±2σ</label>
+      <label><input id="showEv" type="checkbox" checked> Olay işaretleri</label>
+      <label><input id="showCh" type="checkbox" checked> Grafik çizimleri (US100)</label>
+    </div>
+    <div class="grp"><b>Alarmlar</b>
+      <label><input id="snd" type="checkbox" checked> Ses</label>
+      <label>Ses düzeyi <input id="vol" type="range" min="0" max="100" value="70"></label>
+      <label><input id="vib" type="checkbox" checked> Titreşim</label>
+      <label><input id="aBO" type="checkbox" checked> Kırılım (çın)</label>
+      <label><input id="aBig" type="checkbox" checked> Büyük işlem</label>
+      <label><input id="aWall" type="checkbox" checked> Duvar belirdi/çekildi</label>
+      <label><input id="aAbs" type="checkbox" checked> Absorption/Iceberg</label>
+      <label>Büyük işlem ≥ <input id="bigThr" type="number" step="0.5" min="0" value="0"><small id="bigA"></small></label>
+      <label>Duvar ≥ <input id="wallThr" type="number" step="1" min="0" value="0"><small id="wallA"></small></label>
+      <label>Kırılım aralığı <select id="boLook"><option value="1">1 dk</option><option value="2" selected>2 dk</option><option value="5">5 dk</option><option value="15">15 dk</option></select></label>
+      <button id="sndTest">Sesleri dene</button>
+    </div>
+    <div class="grp"><b>Kayıt</b>
+      <button id="rplayBtn">▶ Oturumu tekrar oynat</button>
+      <button id="rsave">⬇ Kaydı indir</button>
+      <label><button id="rloadBtn">📂 Kayıt aç</button><input id="rload" type="file" accept=".json,application/json" hidden></label>
+      <span id="recInfo" style="color:var(--mut)"></span>
+    </div>
+    <div class="grp"><b>Piyasa</b><label>Coin <input id="coin" value="xyz:XYZ100" style="width:110px"></label></div>
+  </div>
+</header>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="zoom">
+    <button id="zout" aria-label="Uzaklaş">−</button>
+    <button id="zin" aria-label="Yakınlaş">+</button>
+    <button id="zc" class="on" aria-label="Otomatik görünüm">◎</button>
+  </div>
+  <div id="rbar">
+    <button id="rpp">⏸</button>
+    <select id="rspd"><option value="1">1x</option><option value="2">2x</option><option value="5" selected>5x</option><option value="10">10x</option><option value="30">30x</option></select>
+    <input id="rseek" type="range" min="0" max="1000" value="0">
+    <span id="rtime"></span>
+    <button id="rexit">✕</button>
+  </div>
+  <div id="toast"></div>
+  <div id="evlog"></div>
+</div>
+</div>
+
+<script src="of01.js"></script>
+<script src="of02.js"></script>
+<script src="of03.js"></script>
+<script src="of04.js"></script>
+<script src="of05.js"></script>
+<script src="of06.js"></script>
+<script src="of07.js"></script>
+<script src="of08.js"></script>
+<script src="of09.js"></script>
+<script src="of10.js"></script>
+<script src="of11.js"></script>
+<script src="of12.js"></script>
+<script src="of13.js"></script>
+
+</body>
+</html>
