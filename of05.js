@@ -1,14 +1,14 @@
 "use strict";
 /* ================= grafik sitesiyle ortak çizimler =================
-   Aynı sitedeki grafik sayfası çizimleri bu telefonda 'gx_draw_US100' anahtarında saklar.
+   Aynı sitedeki grafik sayfası çizimleri bu telefonda 'gx_draw_<SEMBOL>' anahtarında saklar.
    Fiyatlara grafikteki "fiyat farkı" eklenmiştir; burada Hyperliquid fiyatına geri çevrilir. */
 const CH={draws:[],off:0,tz:"UTC"};
 const CH_FIBS=[-0.62,-0.27,0,0.236,0.382,0.5,0.618,0.705,0.786,1];
 function loadChartDrawings(){
   try{
-    const ds=JSON.parse(localStorage.getItem("gx_draw_US100")||"[]"),st=JSON.parse(localStorage.getItem("gx_settings")||"{}");
+    const ds=JSON.parse(localStorage.getItem("gx_draw_"+SYMB)||"[]"),st=JSON.parse(localStorage.getItem("gx_settings")||"{}");
     CH.draws=Array.isArray(ds)?ds.filter(d=>d&&Array.isArray(d.pts)&&d.pts.length):[];
-    CH.off=(st.off&&+st.off.US100)||0;CH.tz=st.tz||"UTC";
+    CH.off=(st.off&&+st.off[SYMB])||0;CH.tz=st.tz||"UTC";
   }catch(e){CH.draws=[]}
 }
 loadChartDrawings();
