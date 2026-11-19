@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>XYZ100 Likidite Haritası</title>
+<title>Likidite Haritası</title>
 <link rel="stylesheet" href="of.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <header>
   <div class="row">
     <a id="toChart" class="lnk" href="./" title="Grafiğe dön">📈 Grafik</a>
-    <span id="dot"></span><span id="title">XYZ100</span>
+    <span id="dot"></span><select id="sym" aria-label="Sembol"><option value="US100">US100</option><option value="XAUUSD">XAUUSD</option></select>
     <button id="go" class="pri">Bağlan</button>
     <button id="demo">Demo</button>
     <select id="view" aria-label="Görünüm"><option value="map" selected>Harita</option><option value="fp">Footprint</option></select>
@@ -43,7 +43,7 @@
       <label><input id="showVW" type="checkbox" checked> VWAP</label>
       <label><input id="showBand" type="checkbox" checked> VWAP ±1σ ±2σ</label>
       <label><input id="showEv" type="checkbox" checked> Olay işaretleri</label>
-      <label><input id="showCh" type="checkbox" checked> Grafik çizimleri (US100)</label>
+      <label><input id="showCh" type="checkbox" checked> Grafik çizimleri</label>
     </div>
     <div class="grp"><b>Alarmlar</b>
       <label><input id="snd" type="checkbox" checked> Ses</label>
@@ -64,7 +64,9 @@
       <label><button id="rloadBtn">📂 Kayıt aç</button><input id="rload" type="file" accept=".json,application/json" hidden></label>
       <span id="recInfo" style="color:var(--mut)"></span>
     </div>
-    <div class="grp"><b>Piyasa</b><label>Coin <input id="coin" value="xyz:XYZ100" style="width:110px"></label></div>
+    <div class="grp"><b>Piyasa</b><label>Hyperliquid coin <input id="coin" value="xyz:XYZ100" style="width:110px"></label>
+      <span id="xgrp" style="display:contents"><label>Altın kaynağı <select id="xsrc"><option value="auto" selected>Otomatik (Binance → Hyperliquid)</option><option value="bn">Binance XAUUSDT</option><option value="hl">Hyperliquid xyz:GOLD</option></select></label>
+      <label>Altın satır boyu <select id="xrow"><option value="0.05">0.05</option><option value="0.1" selected>0.10</option><option value="0.25">0.25</option><option value="0.5">0.50</option></select></label></span></div>
   </div>
 </header>
 <div id="stage">
@@ -86,6 +88,7 @@
 </div>
 </div>
 
+<script src="of00.js"></script>
 <script src="of01.js"></script>
 <script src="of02.js"></script>
 <script src="of03.js"></script>
@@ -99,6 +102,8 @@
 <script src="of11.js"></script>
 <script src="of12.js"></script>
 <script src="of13.js"></script>
+<script src="of14.js"></script>
+<script src="of15.js"></script>
 
 </body>
 </html>
