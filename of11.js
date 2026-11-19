@@ -46,7 +46,7 @@ function handleMsg(kind,m,t){
   if(m.channel==="l2Book"&&m.data&&m.data.levels){
     const L=m.data.levels,b=L[0].map(l=>({px:+l.px,sz:+l.sz})),a=L[1].map(l=>({px:+l.px,sz:+l.sz}));
     if(kind==="fine")onFine(b,a,t);else onCoarse(b,a,t);
-    if(S.mode==="live")setStatus("Canlı: "+$("coin").value.trim()+" (Hyperliquid)"+(S.histInfo?" · "+S.histInfo:""),"live");
+    if(S.mode==="live")setStatus("Canlı: "+srcLabel()+(S.histInfo?" · "+S.histInfo:""),"live");
   }else if(m.channel==="trades"&&Array.isArray(m.data)){
     const arr=m.data.slice().sort((p,q)=>p.time-q.time);
     for(const tr of arr)onTrade(tr.time,+tr.px,+tr.sz,tr.side==="B");
