@@ -8,18 +8,19 @@ setInterval(()=>{
 function resetView(){HM.dirty=true;GR.ver=-1;GR.ref=null;FP.ver=-1;$("evn").textContent="0"}
 function openLive(reset){
   exitReplay(true);closeAll();if(demoT){clearInterval(demoT);demoT=null}
-  const coin=$("coin").value.trim();
+  const bn=srcFor()==="bn",coin=bn?"BINANCE:XAUUSDT@"+bnRow():$("coin").value.trim();
   if(reset){
     S=freshState();resetView();REC={coin,start:Date.now(),ev:[]};
     S.ready=false;liveQ=[];histCandles=null;restored=undefined;
     loadSaved(coin).then(r=>{restored=r||null;tryReady()});
     // geçmiş: önce websocket üzerinden, ayrıca HTTP ile de denenir; 7 sn içinde gelmezse geçmişsiz başlar
-    fetch(INFO_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(candleReq(coin))})
+    if(bn)bnHist();else fetch(INFO_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(candleReq(coin))})
       .then(r=>r.json()).then(a=>{if(Array.isArray(a)&&histCandles==null){histCandles=a;tryReady()}}).catch(()=>{});
     clearTimeout(histTimer);histTimer=setTimeout(()=>{if(histCandles==null){histCandles=[];tryReady()}},7000);
   }
   S.mode="live";userStop=false;
-  setStatus(S.ready?"Yeniden bağlanıyor: "+coin+" ...":"Bağlanıyor, geçmiş yükleniyor: "+coin+" ...","");
+  setStatus((S.ready?"Yeniden bağlanıyor: ":"Bağlanıyor, geçmiş yükleniyor: ")+srcLabel()+" ...","");
+  if(bn){bnOpen();$("go").textContent="Durdur";return}
   wsF=openWs([{type:"l2Book",coin},{type:"trades",coin}],"fine",
     reset?[{method:"post",id:1,request:{type:"info",payload:candleReq(coin)}}]:[]);
   wsC=openWs([{type:"l2Book",coin,nSigFigs:4}],"coarse");
@@ -52,22 +53,23 @@ function demoStep(t,dt){
     trades.push({time:Math.round(t-dt*1000+Math.random()*dt*1000),px:buy?ba:bb,sz,buy});
   }
   trades.sort((p,q)=>p.time-q.time);
-  for(const tr of trades)onTrade(tr.time,tr.px,+tr.sz.toFixed(4),tr.buy);
+  const P=v=>+(v*(M.sc||1)).toFixed(2);
+  for(const tr of trades)onTrade(tr.time,P(tr.px),+tr.sz.toFixed(4),tr.buy);
   const fb=[],fa=[];
-  for(let i=0;i<20;i++){fb.push({px:bb-i,sz:+M.book.get(bb-i).s.toFixed(4)});fa.push({px:ba+i,sz:+M.book.get(ba+i).s.toFixed(4)})}
+  for(let i=0;i<20;i++){fb.push({px:P(bb-i),sz:+M.book.get(bb-i).s.toFixed(4)});fa.push({px:P(ba+i),sz:+M.book.get(ba+i).s.toFixed(4)})}
   onFine(fb,fa,t);
   const cb=[],ca=[],b0=Math.floor(bb/10)*10,a0=Math.ceil(ba/10)*10;
   for(let i=0;i<20;i++){
     let sb=0,sa=0;const pb=b0-10*i,pa=a0+10*i;
     for(let k=0;k<10;k++){const lb=M.book.get(pb+k);if(lb&&pb+k<=bb)sb+=lb.s;const la=M.book.get(pa-k);if(la&&pa-k>=ba)sa+=la.s}
-    cb.push({px:pb,sz:sb});ca.push({px:pa,sz:sa});
+    cb.push({px:P(pb),sz:sb});ca.push({px:P(pa),sz:sa});
   }
   onCoarse(cb,ca,t);capture(t);
 }
 function startDemo(){
   exitReplay(true);userStop=true;closeAll();if(demoT)clearInterval(demoT);
   S=freshState();S.mode="demo";resetView();REC={coin:"DEMO",start:Date.now(),ev:[]};
-  DM={mid:27315,vel:0,book:new Map(),pbb:null,pba:null};
+  DM={mid:SYM[SYMB].demoMid,sc:SYM[SYMB].demoSc,vel:0,book:new Map(),pbb:null,pba:null};
   const now=Date.now();
   SILENT=true;
   // eşiklerin oluşması için ısı haritası eşiği önceden hesaplanır
