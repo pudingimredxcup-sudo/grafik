@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORB Seviyeleri</title>
+<style>
+:root{--bg:#0b0f17;--card:#121826;--line:#232b3b;--txt:#e6ebf2;--mut:#8b95a7;--up:#26a69a;--dn:#ef5350;--acc:#f5c542}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.4 -apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border-bottom:1px solid var(--line)}
+header b{font-size:16px;margin-right:auto}a.btn,button{background:#1b2333;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 11px;font:inherit;text-decoration:none}
+button.pri{background:#1f4fd1;border-color:#1f4fd1}input{background:#0f1420;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px}.ctl label{display:flex;gap:6px;align-items:center;color:var(--mut)}
+#info{padding:0 10px;color:var(--mut);font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;padding:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.card h2{margin:0 0 8px;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+.card h2 small{color:var(--mut);font-weight:400;font-size:12px}
+table{width:100%;border-collapse:collapse}td{padding:4px 2px;border-bottom:1px solid var(--line)}td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.sec{margin-top:10px;font-weight:700}.up{color:var(--up)}.dn{color:var(--dn)}.mut{color:var(--mut);font-weight:400}
+.st{margin-top:10px;padding:8px;border-radius:8px;background:#0f1420;font-size:13px}
+.card button{margin-top:10px;width:100%}.err{color:var(--dn)}
+.note{padding:4px 12px 16px;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<header><b>ORB Seviyeleri</b><a class="btn" href="./">📈 Grafik</a><a class="btn" href="orderflow.html">▦ OF</a></header>
+<div class="ctl">
+  <label>Tarih (NY) <input id="day" type="date"></label>
+  <label>Başlangıç <input id="t0" type="time" value="08:30"></label>
+  <label>Bitiş <input id="t1" type="time" value="09:00"></label>
+  <button class="pri" id="go">Hesapla</button>
+</div>
+<div id="info"></div>
+<div class="cards" id="cards"></div>
+<div class="note">Saatler New York saatidir. Veri: Hyperliquid 1 dk mumları; grafikte ayarladığın fiyat farkı eklenir. Stop: aralığın ortası (agresif) — muhafazakâr stop için karşı uç. Hedefler aralığın 1× ve 2× uzatması. Eğitim amaçlıdır, yatırım tavsiyesi değildir.</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const SY={US100:{coin:"xyz:XYZ100",dp:0},XAUUSD:{coin:"xyz:GOLD",dp:1}};
+const NY="America/New_York";
+let ST={};try{ST=JSON.parse(localStorage.getItem("gx_settings")||"{}")}catch(e){}
+const OFF=s=>(ST.off&&+ST.off[s])||0;
+// NY yerel saati -> UTC ms (yaz/kış saati dahil)
+function nyParts(ms){const p={};for(const x of new Intl.DateTimeFormat("en-US",{timeZone:NY,hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).formatToParts(ms))p[x.type]=x.value;return p}
+function nyToUtc(ds,hm){const [y,m,d]=ds.split("-").map(Number),[h,mi]=hm.split(":").map(Number);let g=Date.UTC(y,m-1,d,h,mi);
+  for(let i=0;i<2;i++){const p=nyParts(g),seen=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);g+=Date.UTC(y,m-1,d,h,mi)-seen}return g}
+const nyToday=()=>{const p=nyParts(Date.now());return `${p.year}-${p.month}-${p.day}`};
+const hhmm=(ms,tz)=>new Intl.DateTimeFormat("tr-TR",{timeZone:tz,hour:"2-digit",minute:"2-digit"}).format(ms);
+const f=(v,dp)=>v.toFixed(dp);
+async function candles(coin,iv,a,b){
+  const r=await fetch("https://api.hyperliquid.xyz/info",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"candleSnapshot",req:{coin,interval:iv,startTime:a,endTime:b}})});
+  const j=await r.json();return (Array.isArray(j)?j:[]).map(c=>({t:+c.t,o:+c.o,h:+c.h,l:+c.l,c:+c.c})).sort((x,y)=>x.t-y.t);
+}
+const RES={};
+async function calc(sym,a,b,dayEnd){
+  const s=SY[sym],off=OFF(sym),now=Date.now(),end=Math.min(now,dayEnd);
+  let cs=await candles(s.coin,"1m",a,end),iv=1;
+  if(!cs.some(c=>c.t>=a&&c.t<b)){cs=await candles(s.coin,"5m",a,end);iv=5}
+  cs.forEach(c=>{c.o+=off;c.h+=off;c.l+=off;c.c+=off});
+  const win=cs.filter(c=>c.t>=a&&c.t<b);if(!win.length)throw new Error("Bu aralık için veri yok (piyasa kapalı ya da çok eski tarih).");
+  const H=Math.max(...win.map(c=>c.h)),L=Math.min(...win.map(c=>c.l)),R=H-L,M=(H+L)/2;
+  const done=now>=b,after=cs.filter(c=>c.t>=b);
+  // kırılım: aralık bittikten sonra ilk kapanış dışarıda
+  let st="";
+  if(!done)st=`Aralık henüz bitmedi (bitiş ${hhmm(b,NY)} NY). Şimdilik: Y ${f(H,s.dp)} / D ${f(L,s.dp)}`;
+  else{
+    const bo=after.find(c=>c.c>H||c.c<L);
+    if(!bo)st=`Henüz kırılım yok — fiyat aralığın içinde${after.length?` (son ${f(after[after.length-1].c,s.dp)})`:""}.`;
+    else{
+      const up=bo.c>H,t1=up?H+R:L-R;let res="açık";
+      for(const c of after.filter(c=>c.t>bo.t)){const hitT=up?c.h>=t1:c.l<=t1,hitS=up?c.l<=M:c.h>=M;
+        if(hitT&&hitS){res="aynı mumda hem hedef hem stop";break}if(hitT){res=`Hedef 1 (${f(t1,s.dp)}) ${hhmm(c.t,NY)}'de görüldü`;break}if(hitS){res=`Orta stop (${f(M,s.dp+1)}) ${hhmm(c.t,NY)}'de görüldü`;break}}
+      st=`<span class="${up?"up":"dn"}">${up?"Yukarı":"Aşağı"} kırılım</span> ${hhmm(bo.t,NY)} NY (${iv} dk kapanış ${f(bo.c,s.dp)}). Sonrası: ${res}.`;
+    }
+  }
+  RES[sym]={sym,a,b,H,L,R,M,dp:s.dp};
+  return `<div class="card"><h2>${sym}<small>${s.coin}${off?` · fark ${off>0?"+":""}${off}`:""}</small></h2>
+  <table><tr><td>Aralık yükseği</td><td>${f(H,s.dp)}</td></tr><tr><td>Aralık düşüğü</td><td>${f(L,s.dp)}</td></tr>
+  <tr><td>Aralık (range)</td><td>${f(R,s.dp)}</td></tr><tr><td>Orta</td><td>${f(M,s.dp+1)}</td></tr></table>
+  <div class="sec up">LONG — kapanış ${f(H,s.dp)} üstünde</div>
+  <table><tr><td>Giriş</td><td>${f(H,s.dp)}</td></tr><tr><td>Stop (orta / karşı uç)</td><td>${f(M,s.dp+1)} <span class="mut">/ ${f(L,s.dp)}</span></td></tr>
+  <tr><td>Hedef 1 (1×)</td><td>${f(H+R,s.dp)}</td></tr><tr><td>Hedef 2 (2×)</td><td>${f(H+2*R,s.dp)}</td></tr></table>
+  <div class="sec dn">SHORT — kapanış ${f(L,s.dp)} altında</div>
+  <table><tr><td>Giriş</td><td>${f(L,s.dp)}</td></tr><tr><td>Stop (orta / karşı uç)</td><td>${f(M,s.dp+1)} <span class="mut">/ ${f(H,s.dp)}</span></td></tr>
+  <tr><td>Hedef 1 (1×)</td><td>${f(L-R,s.dp)}</td></tr><tr><td>Hedef 2 (2×)</td><td>${f(L-2*R,s.dp)}</td></tr></table>
+  <div class="st">${st}</div>
+  <button data-draw="${sym}">Grafiğe çiz (${sym})</button></div>`;
+}
+// grafik çizimi: aralık kutusu + long/short pozisyon kutuları (eski ORB çizimleri silinir)
+const chartT=ms=>Math.round(ms/1000)-(ST.tz==="local"?new Date(ms).getTimezoneOffset()*60:0);
+function draw(sym){
+  const r=RES[sym];if(!r)return;
+  const key="gx_draw_"+sym;let ds=[];try{ds=JSON.parse(localStorage.getItem(key)||"[]")}catch(e){}
+  ds=ds.filter(d=>!d.orb);
+  const id=()=>"orb"+Math.random().toString(36).slice(2,8),ta=chartT(r.a),tb=chartT(r.b),te=chartT(r.b+60*60000);
+  ds.push({id:id(),orb:1,type:"rect",color:"#f5c542",pts:[{t:ta,p:r.H},{t:tb,p:r.L}]});
+  ds.push({id:id(),orb:1,type:"pos",color:"#c9ced6",pts:[{t:tb,p:r.H},{t:te,p:r.M},{t:te,p:r.H+r.R}]});
+  ds.push({id:id(),orb:1,type:"pos",color:"#c9ced6",pts:[{t:tb,p:r.L},{t:te,p:r.M},{t:te,p:r.L-r.R}]});
+  try{localStorage.setItem(key,JSON.stringify(ds));
+    const s=JSON.parse(localStorage.getItem("gx_settings")||"{}");s.sym=sym;localStorage.setItem("gx_settings",JSON.stringify(s));
+    location.href="./";}catch(e){alert("Kaydedilemedi: "+e.message)}
+}
+async function run(){
+  const day=$("day").value||nyToday(),t0=$("t0").value||"08:30",t1=$("t1").value||"09:00";
+  try{localStorage.setItem("orb_cfg",JSON.stringify({t0,t1}))}catch(e){}
+  const a=nyToUtc(day,t0),b=nyToUtc(day,t1),dayEnd=nyToUtc(day,"17:00");
+  const loc=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  $("info").textContent=`${day} · NY ${t0}–${t1} = senin saatinle ${hhmm(a,loc)}–${hhmm(b,loc)}`;
+  if(!(b>a)){$("cards").innerHTML='<div class="err">Bitiş başlangıçtan sonra olmalı.</div>';return}
+  $("cards").innerHTML='<div class="mut" style="padding:10px">Yükleniyor…</div>';
+  const out=await Promise.all(Object.keys(SY).map(s=>calc(s,a,b,dayEnd).catch(e=>`<div class="card"><h2>${s}</h2><div class="err">${e.message}</div></div>`)));
+  $("cards").innerHTML=out.join("");
+  for(const btn of document.querySelectorAll("[data-draw]"))btn.onclick=()=>draw(btn.dataset.draw);
+}
+try{const c=JSON.parse(localStorage.getItem("orb_cfg")||"{}");if(c.t0)$("t0").value=c.t0;if(c.t1)$("t1").value=c.t1}catch(e){}
+$("day").value=nyToday();$("go").onclick=run;run();
+</script>
+</body>
+</html>
