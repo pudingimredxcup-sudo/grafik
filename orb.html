@@ -27,8 +27,8 @@ table{width:100%;border-collapse:collapse}td{padding:4px 2px;border-bottom:1px s
 <header><b>ORB Seviyeleri</b><a class="btn" href="./">📈 Grafik</a><a class="btn" href="orderflow.html">▦ OF</a></header>
 <div class="ctl">
   <label>Tarih (NY) <input id="day" type="date"></label>
-  <label>Başlangıç <input id="t0" type="time" value="08:30"></label>
-  <label>Bitiş <input id="t1" type="time" value="09:00"></label>
+  <label>Başlangıç (NY) <input id="t0" type="time" value="09:30"></label>
+  <label>Bitiş (NY) <input id="t1" type="time" value="10:00"></label>
   <button class="pri" id="go">Hesapla</button>
 </div>
 <div id="info"></div>
@@ -102,8 +102,8 @@ function draw(sym){
     location.href="./";}catch(e){alert("Kaydedilemedi: "+e.message)}
 }
 async function run(){
-  const day=$("day").value||nyToday(),t0=$("t0").value||"08:30",t1=$("t1").value||"09:00";
-  try{localStorage.setItem("orb_cfg",JSON.stringify({t0,t1}))}catch(e){}
+  const day=$("day").value||nyToday(),t0=$("t0").value||"09:30",t1=$("t1").value||"10:00";
+  try{localStorage.setItem("orb_cfg2",JSON.stringify({t0,t1}))}catch(e){}
   const a=nyToUtc(day,t0),b=nyToUtc(day,t1),dayEnd=nyToUtc(day,"17:00");
   const loc=Intl.DateTimeFormat().resolvedOptions().timeZone;
   $("info").textContent=`${day} · NY ${t0}–${t1} = senin saatinle ${hhmm(a,loc)}–${hhmm(b,loc)}`;
@@ -113,7 +113,7 @@ async function run(){
   $("cards").innerHTML=out.join("");
   for(const btn of document.querySelectorAll("[data-draw]"))btn.onclick=()=>draw(btn.dataset.draw);
 }
-try{const c=JSON.parse(localStorage.getItem("orb_cfg")||"{}");if(c.t0)$("t0").value=c.t0;if(c.t1)$("t1").value=c.t1}catch(e){}
+try{const c=JSON.parse(localStorage.getItem("orb_cfg2")||"{}");if(c.t0)$("t0").value=c.t0;if(c.t1)$("t1").value=c.t1}catch(e){}
 $("day").value=nyToday();$("go").onclick=run;run();
 </script>
 </body>
