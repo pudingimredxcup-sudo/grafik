@@ -12,6 +12,8 @@ if(!S.off) S.off = {XAUUSD:0, US100:0};
 const saveS = () => store.set('settings', S);
 // clock defaults to UTC like the TradingView chart; older drawings were stored in phone time
 if(!S.tz){ S.tz = 'UTC'; ['XAUUSD','US100'].forEach(k => { const ds = store.get('draw_'+k, null); if(ds && ds.length){ ds.forEach(d => d.pts.forEach(p => { p.t = p.t + new Date(p.t*1000).getTimezoneOffset()*60; })); store.set('draw_'+k, ds); } }); saveS(); }
+// tek seferlik: grafik saatini telefonun saatine (Makedonya) geçir; çizimler de kaydırılır
+if(!S.tzLocal1){ if(S.tz==='UTC'){ ['XAUUSD','US100'].forEach(k => { const ds = store.get('draw_'+k, []); ds.forEach(d => d.pts.forEach(p => { p.t -= new Date(p.t*1000).getTimezoneOffset()*60; })); store.set('draw_'+k, ds); }); S.tz = 'local'; } S.tzLocal1 = 1; saveS(); }
 
 const TFS = [['1m','1dk',60],['5m','5dk',300],['15m','15dk',900],['30m','30dk',1800],['1h','1s',3600],['4h','4s',14400],['1d','1G',86400]];
 if(!TFS.some(x=>x[0]===S.tf)) S.tf = '15m';
