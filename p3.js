@@ -14,7 +14,9 @@ function l2t(l){
   const i=Math.floor(l), f=l-i; return bars[i].time + f*(bars[i+1].time-bars[i].time);
 }
 const ts = chart.timeScale();
-function toXY(pt){ return { x: ts.logicalToCoordinate(t2l(pt.t)), y: series.priceToCoordinate(pt.p) }; }
+// kutuphane kesirli indekste 0 donduruyor (cizim sol kenara kayiyordu): iki mum arasini kendimiz araliyoruz
+function lx(l){ const i = Math.floor(l), a = ts.logicalToCoordinate(i); if(a==null || l===i) return a; const b = ts.logicalToCoordinate(i+1); return b==null ? a : a + (l-i)*(b-a); }
+function toXY(pt){ return { x: lx(t2l(pt.t)), y: series.priceToCoordinate(pt.p) }; }
 function fromXY(x, y, snap){
   const l = ts.coordinateToLogical(x); let p = series.coordinateToPrice(y);
   if(l==null || p==null) return null;
