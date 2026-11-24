@@ -26,14 +26,13 @@ table{width:100%;border-collapse:collapse}td{padding:4px 2px;border-bottom:1px s
 <body>
 <header><b>Asya ATM</b><a class="btn" href="./">📈 Grafik</a><a class="btn" href="orb.html">ORB</a><a class="btn" href="orderflow.html">▦ OF</a></header>
 <div class="ctl">
-  <label>Gece (NY tarihi) <input id="day" type="date"></label>
-  <label>Son giriş (NY) <input id="cut" type="time" value="02:00"></label>
-  <label><input id="wide" type="checkbox"> Geniş stop</label>
+  <label>Gün <input id="day" type="date"></label>
+  <label>Son giriş <input id="cut" type="time" value="09:00"></label>
   <button class="pri" id="go">Hesapla</button>
 </div>
 <div id="info"></div>
 <div class="cards" id="cards"></div>
-<div class="note">Range: 18:00–19:00 New York (Üsküp 00:00–01:00). Sweep = seviyenin dışında gövde kapanışı. Sonra içeride kapanış = geri alma. Seviyeye değip içeride kapanan mumun kapanışında giriş. Stop: o mumun fitili (geniş stop: sweep ucu). Hedef: range'in karşı ucu. Gecede tek işlem; stop ve hedef aynı mumdaysa stop sayılır. Veri: Hyperliquid 1 dk (eski geceler 5 dk), grafikte ayarladığın fiyat farkı eklenir. Bu gecenin sayfası açıkken her dakika yenilenir.</div>
+<div class="note">Saatler Üsküp saatidir. Range 01:00–01:30 (grafikte ⚙ Ayarlar'dan değişir): bu aralıktaki 5 dk mumların en yükseği ve en düşüğü. Giriş: range'in dışında kapanan ilk 5 dk mumun kapanışında, kırılım yönüne. SL: long'da girişten önceki son kırmızı 5 dk mumun dibi, short'ta son yeşil 5 dk mumun tepesi. TP açık; gün 23:00'te kapanır. Günde tek işlem, son giriş saatinden sonra işlem açılmaz. Grafikteki hedef çizgisi sadece 2R referansıdır. Veri: Hyperliquid 5 dk, grafikte ayarladığın fiyat farkı eklenir. Bugünün sayfası açıkken her dakika yenilenir.</div>
 <script>
 "use strict";
 let S={};try{S=JSON.parse(localStorage.getItem("gx_settings")||"{}")}catch(e){}
