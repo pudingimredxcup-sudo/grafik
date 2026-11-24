@@ -1,0 +1,21 @@
+kaydedildi yahoo-nq-m5.csv.gz: 13623 satir
+kaydedildi yahoo-gc-m5.csv.gz: 13660 satir
+binance yok XAUUSDT-5m-2026-11-24.zip: HTTP Error 404: Not Found
+kaydedildi binance-xauusdt-m5.csv.gz: 59616 satir
+kaydedildi hl-us100-m5.csv.gz: 5000 satir
+kaydedildi hl-gold-m5.csv.gz: 5000 satir
+duka USATECHIDXUSD: 30/178 gun, 26 hata
+duka USATECHIDXUSD: 60/178 gun, 35 hata
+duka USATECHIDXUSD: 90/178 gun, 42 hata
+duka USATECHIDXUSD: 120/178 gun, 47 hata
+duka USATECHIDXUSD: 150/178 gun, 72 hata
+duka USATECHIDXUSD: 97026 dk mum, indirilemeyen gun 87: ['2026-05-01', '2026-05-04', '2026-05-05', '2026-05-06', '2026-05-07', '2026-05-08', '2026-05-10', '2026-05-11', '2026-05-12', '2026-05-13', '2026-05-15', '2026-05-18', '2026-05-19', '2026-05-20', '2026-05-22', '2026-05-24', '2026-05-25', '2026-05-26', '2026-05-27', '2026-05-28']
+kaydedildi duka-usatechidxusd-m1raw.csv.gz: 97026 satir
+duka XAUUSD: 30/178 gun, 8 hata
+duka XAUUSD: 60/178 gun, 35 hata
+duka XAUUSD: 90/178 gun, 51 hata
+duka XAUUSD: 120/178 gun, 58 hata
+duka XAUUSD: 150/178 gun, 60 hata
+duka XAUUSD: 119396 dk mum, indirilemeyen gun 77: ['2026-05-01', '2026-05-03', '2026-05-04', '2026-05-07', '2026-05-10', '2026-05-25', '2026-06-03', '2026-06-04', '2026-06-07', '2026-06-08', '2026-06-09', '2026-06-10', '2026-06-11', '2026-06-12', '2026-06-14', '2026-06-15', '2026-06-16', '2026-06-17', '2026-06-18', '2026-06-21']
+kaydedildi duka-xauusd-m1raw.csv.gz: 119396 satir
+bitti
