@@ -1,0 +1,6 @@
+binance 2026-01: 8928 mum
+binance 2026-02: 8064 mum
+binance 2026-03: 8928 mum
+binance 2026-04: 8640 mum
+kaydedildi: 34560 mum
+bitti2
