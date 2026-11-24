@@ -5,6 +5,9 @@ on:
     paths: ['.github/workflows/bt-data.yml', '.github/bt/**']
 permissions:
   contents: write
+concurrency:
+  group: bt-data
+  cancel-in-progress: true
 jobs:
   get:
     runs-on: ubuntu-latest
@@ -12,8 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: veri indir
-        run: python3 .github/bt/get.py
+        timeout-minutes: 60
+        continue-on-error: true
+        run: python3 -u .github/bt/get.py
       - name: commit
+        if: always()
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
