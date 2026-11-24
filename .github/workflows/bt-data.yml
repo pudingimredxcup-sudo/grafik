@@ -1,0 +1,31 @@
+name: bt-data
+on:
+  push:
+    branches: [backtest-data]
+    paths: ['.github/workflows/bt-data.yml']
+permissions:
+  contents: write
+jobs:
+  get:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: download dukascopy m5
+        run: |
+          mkdir -p data
+          for s in xauusd usatechidxusd; do
+            npx -y dukascopy-node@latest -s -i $s -from 2026-05-01 -to 2026-11-25 -t m5 -f csv -dir data -fn $s-m5 -r 5 -rp 2000 -bs 10 -bp 1000 --chrome-path "$(which google-chrome || which chromium || echo '')"
+            gzip -9 data/$s-m5.csv
+          done
+          ls -la data
+      - name: commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data
+          git commit -m "backtest verisi: dukascopy 5dk XAUUSD + US100 (son 6 ay)"
+          git push
