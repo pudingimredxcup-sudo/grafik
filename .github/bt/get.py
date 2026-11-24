@@ -7,14 +7,15 @@ LOG = []
 D0, D1 = dt.date(2026, 5, 1), dt.date(2026, 11, 24)
 
 
-def get(u, data=None, h=None):
+def get(u, data=None, h=None, to=60):
     r = urllib.request.Request(u, data=data, headers={**UA, **(h or {})})
-    return urllib.request.urlopen(r, timeout=60).read()
+    return urllib.request.urlopen(r, timeout=to).read()
 
 
 def log(s):
     print(s, flush=True)
     LOG.append(s)
+    open('data/log.txt', 'a').write(s + '\n')
 
 
 def days():
@@ -33,40 +34,40 @@ def save(name, rows):
 
 
 # 1) Dukascopy eski datafeed (bi5, 1 dk mumlar). Ham tamsayi fiyat yazilir, olcek sonra ayarlanir.
+def duka_day(sym, d):
+    u = f'https://datafeed.dukascopy.com/datafeed/{sym}/{d.year}/{d.month - 1:02d}/{d.day:02d}/BID_candles_min_1.bi5'
+    for k in range(3):
+        try:
+            b = get(u, to=20)
+            out = []
+            if b:
+                raw = lzma.decompress(b)
+                base = int(dt.datetime(d.year, d.month, d.day, tzinfo=dt.timezone.utc).timestamp())
+                for i in range(0, len(raw) - 23, 24):
+                    t, o, c, l, h, v = struct.unpack('>5if', raw[i:i + 24])
+                    if v > 0:
+                        out.append(((base + t) * 1000, o, h, l, c))
+            return out
+        except Exception:
+            time.sleep(2 + 2 * k)
+    return None
+
+
 def duka(sym):
-    test = f'https://datafeed.dukascopy.com/datafeed/{sym}/2026/04/12/BID_candles_min_1.bi5'
-    try:
-        b = get(test)
-        log(f'duka test ok {sym} {len(b)} bayt')
-    except Exception as e:
-        log(f'duka test HATA {sym}: {e}')
-        return
-    rows, bad = [], 0
-    for d in days():
-        if d.weekday() == 5:
-            continue
-        u = f'https://datafeed.dukascopy.com/datafeed/{sym}/{d.year}/{d.month - 1:02d}/{d.day:02d}/BID_candles_min_1.bi5'
-        b = None
-        for k in range(4):
-            try:
-                b = get(u)
-                break
-            except Exception as e:
-                if k == 3:
-                    bad += 1
-                time.sleep(1 + k)
-        if not b:
-            continue
-        raw = lzma.decompress(b)
-        base = int(dt.datetime(d.year, d.month, d.day, tzinfo=dt.timezone.utc).timestamp())
-        for i in range(0, len(raw) - 23, 24):
-            t, o, c, l, h, v = struct.unpack('>5if', raw[i:i + 24])
-            if v > 0:
-                rows.append(((base + t) * 1000, o, h, l, c))
-        time.sleep(0.15)
-    log(f'duka {sym}: {len(rows)} dk mum, {bad} gun indirilemedi')
+    from concurrent.futures import ThreadPoolExecutor
+    ds = [d for d in days() if d.weekday() != 5]
+    rows, bad = [], []
+    with ThreadPoolExecutor(8) as ex:
+        for n, (d, r) in enumerate(zip(ds, ex.map(lambda d: duka_day(sym, d), ds))):
+            if r is None:
+                bad.append(d.isoformat())
+            else:
+                rows += r
+            if n % 30 == 29:
+                log(f'duka {sym}: {n + 1}/{len(ds)} gun, {len(bad)} hata')
+    log(f'duka {sym}: {len(rows)} dk mum, indirilemeyen gun {len(bad)}: {bad[:20]}')
     if rows:
-        save(f'duka-{sym.lower()}-m1raw.csv.gz', rows)
+        save(f'duka-{sym.lower()}-m1raw.csv.gz', sorted(rows))
 
 
 # 2) Yahoo Finance vadeli (5 dk, son 60 gun)
@@ -117,11 +118,11 @@ def hyper(coin, name):
         log(f'hyperliquid HATA {coin}: {e}')
 
 
-duka('XAUUSD')
-duka('USATECHIDXUSD')
 yahoo('NQ%3DF', 'nq')
 yahoo('GC%3DF', 'gc')
 binance()
 hyper('xyz:XYZ100', 'us100')
 hyper('xyz:GOLD', 'gold')
-open('data/log.txt', 'w').write('\n'.join(LOG) + '\n')
+duka('USATECHIDXUSD')
+duka('XAUUSD')
+log('bitti')
