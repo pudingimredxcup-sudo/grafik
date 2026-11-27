@@ -1,55 +1,60 @@
-import urllib.request as U, urllib.parse as P, re, io, zipfile, gzip, os, time, calendar
-os.makedirs('data/hd', exist_ok=True)
-LOG = open('data/log3.txt', 'a')
+import urllib.request as U, lzma, struct, gzip, os, json, io, zipfile, time, datetime as dt
+from concurrent.futures import ThreadPoolExecutor
+os.makedirs('data/tail', exist_ok=True)
+LOG = open('data/log4.txt', 'a')
 def log(*a):
-    s = ' '.join(str(x) for x in a); print(s); LOG.write(s + '\n'); LOG.flush()
-BASE = 'https://www.histdata.com/download-free-forex-historical-data/?/ascii/1-minute-bar-quotes/'
-UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36'
-def fetch(pair, year, month=None):
-    ref = BASE + pair + '/' + str(year) + ('/' + str(month) if month else '')
-    h = U.urlopen(U.Request(ref, headers={'User-Agent': UA}), timeout=60).read().decode('utf8', 'ignore')
-    m = re.search(r'<input[^>]*id="tk"[^>]*>', h)
-    v = re.search(r'value="([^"]*)"', m.group(0)) if m else None
-    if not v or not v.group(1): raise Exception('token yok')
-    dm = str(year) + (str(month).zfill(2) if month else '')
-    body = P.urlencode({'tk': v.group(1), 'date': str(year), 'datemonth': dm, 'platform': 'ASCII', 'timeframe': 'M1', 'fxpair': pair.upper()}).encode()
-    rq = U.Request('https://www.histdata.com/get.php', data=body, headers={'User-Agent': UA, 'Referer': ref, 'Origin': 'https://www.histdata.com', 'Content-Type': 'application/x-www-form-urlencoded'})
-    z = U.urlopen(rq, timeout=300).read()
-    zf = zipfile.ZipFile(io.BytesIO(z))
-    n = [x for x in zf.namelist() if x.lower().endswith('.csv')][0]
-    return zf.read(n).decode()
-def m5(txt):
+    s = ' '.join(str(x) for x in a); print(s, flush=True); LOG.write(s + '\n'); LOG.flush()
+UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36'}
+def get(u, tries=4, to=30):
+    err = None
+    for k in range(tries):
+        try: return U.urlopen(U.Request(u, headers=UA), timeout=to).read()
+        except Exception as e: err = e; time.sleep(2 * (k + 1))
+    raise err
+def m5(rows):
     B = {}
-    for ln in txt.splitlines():
-        a = ln.strip().split(';')
-        if len(a) < 5 or ' ' not in a[0]: continue
-        d, t = a[0].split(' ')
-        ts = calendar.timegm((int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[:2]), int(t[2:4]), 0)) + 5 * 3600
-        k = ts - ts % 300
-        o, hi, lo, c = map(float, a[1:5])
-        b = B.get(k)
-        if b is None: B[k] = [o, hi, lo, c]
-        else:
-            if hi > b[1]: b[1] = hi
-            if lo < b[2]: b[2] = lo
-            b[3] = c
+    for t, o, h, l, c in sorted(rows):
+        k = t - t % 300000; b = B.get(k)
+        if b is None: B[k] = [o, h, l, c]
+        else: b[1] = max(b[1], h); b[2] = min(b[2], l); b[3] = c
     return B
 def save(name, B):
-    with gzip.open('data/hd/' + name + '.csv.gz', 'wt') as f:
+    with gzip.open('data/tail/' + name + '.csv.gz', 'wt') as f:
         f.write('timestamp,open,high,low,close\n')
-        for k in sorted(B):
-            b = B[k]; f.write('%d,%.3f,%.3f,%.3f,%.3f\n' % (k * 1000, b[0], b[1], b[2], b[3]))
-JOBS = []
-for pair, y0 in (('xauusd', 2009), ('nsxusd', 2010)):
-    for y in range(y0, 2026): JOBS.append((pair, y, None))
-    for mo in range(1, 12): JOBS.append((pair, 2026, mo))
-for pair, y, mo in JOBS:
-    name = pair + '-' + str(y) + ('-' + str(mo).zfill(2) if mo else '')
-    if os.path.exists('data/hd/' + name + '.csv.gz'): continue
-    for k in range(3):
-        try:
-            B = m5(fetch(pair, y, mo)); save(name, B); log(name, 'ok', len(B)); break
-        except Exception as e:
-            log(name, 'hata', k, repr(e)[:200]); time.sleep(5 * (k + 1))
-    time.sleep(1)
+        for k in sorted(B): f.write('%d,%.3f,%.3f,%.3f,%.3f\n' % (k, *B[k]))
+    log(name, len(B), 'bar')
+DAYS = [dt.date(2026, 11, 9) + dt.timedelta(days=i) for i in range(18)]
+def duka_day(inst, d):
+    u = 'https://datafeed.dukascopy.com/datafeed/%s/%d/%02d/%02d/BID_candles_min_1.bi5' % (inst, d.year, d.month - 1, d.day)
+    try: raw = get(u)
+    except Exception as e: log(inst, d, 'hata', repr(e)[:120]); return []
+    if not raw: return []
+    b = lzma.decompress(raw); base = int(dt.datetime(d.year, d.month, d.day, tzinfo=dt.timezone.utc).timestamp())
+    out = []
+    for i in range(0, len(b) // 24 * 24, 24):
+        t, o, c, l, h, v = struct.unpack('>IIIIIf', b[i:i + 24])
+        if v > 0: out.append(((base + t) * 1000, o / 1000, h / 1000, l / 1000, c / 1000))
+    return out
+for inst in ('XAUUSD', 'USATECHIDXUSD'):
+    with ThreadPoolExecutor(6) as ex: parts = list(ex.map(lambda d: duka_day(inst, d), DAYS))
+    save('duka-' + inst.lower(), m5([r for p in parts for r in p]))
+for sym, nm in (('NQ=F', 'nq'), ('GC=F', 'gc')):
+    try:
+        j = json.loads(get('https://query1.finance.yahoo.com/v8/finance/chart/%s?interval=5m&range=60d' % sym))['chart']['result'][0]
+        q = j['indicators']['quote'][0]; rows = []
+        for i, t in enumerate(j['timestamp']):
+            if None in (q['open'][i], q['high'][i], q['low'][i], q['close'][i]): continue
+            rows.append((t * 1000, q['open'][i], q['high'][i], q['low'][i], q['close'][i]))
+        save('yahoo-' + nm, m5(rows))
+    except Exception as e: log(sym, 'hata', repr(e)[:150])
+rows = []
+for d in DAYS:
+    u = 'https://data.binance.vision/data/futures/um/daily/klines/XAUUSDT/5m/XAUUSDT-5m-%s.zip' % d.isoformat()
+    try:
+        z = zipfile.ZipFile(io.BytesIO(get(u, tries=2)))
+        for line in z.read(z.namelist()[0]).decode().splitlines():
+            a = line.split(',')
+            if a[0].isdigit(): rows.append((int(a[0]), float(a[1]), float(a[2]), float(a[3]), float(a[4])))
+    except Exception as e: log('binance', d, 'hata', repr(e)[:100])
+save('binance-xauusdt', m5(rows))
 log('bitti')
