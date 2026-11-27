@@ -1,0 +1,22 @@
+XAUUSD 2026-11-10 hata <HTTPError 503: 'Service Unavailable'>
+XAUUSD 2026-11-09 hata <HTTPError 503: 'Service Unavailable'>
+XAUUSD 2026-11-11 hata URLError(TimeoutError('timed out'))
+XAUUSD 2026-11-14 hata URLError(TimeoutError('timed out'))
+XAUUSD 2026-11-17 hata URLError(TimeoutError('timed out'))
+XAUUSD 2026-11-19 hata URLError(ConnectionResetError(104, 'Connection reset by peer'))
+XAUUSD 2026-11-23 hata URLError(TimeoutError('timed out'))
+XAUUSD 2026-11-25 hata URLError(TimeoutError('timed out'))
+duka-xauusd 1902 bar
+USATECHIDXUSD 2026-11-15 hata <HTTPError 503: 'Service Unavailable'>
+USATECHIDXUSD 2026-11-18 hata TimeoutError('The read operation timed out')
+USATECHIDXUSD 2026-11-17 hata <HTTPError 503: 'Service Unavailable'>
+USATECHIDXUSD 2026-11-25 hata <HTTPError 503: 'Service Unavailable'>
+USATECHIDXUSD 2026-11-16 hata <HTTPError 503: 'Service Unavailable'>
+USATECHIDXUSD 2026-11-23 hata <HTTPError 503: 'Service Unavailable'>
+USATECHIDXUSD 2026-11-26 hata <HTTPError 503: 'Service Unavailable'>
+USATECHIDXUSD 2026-11-24 hata TimeoutError('The read operation timed out')
+duka-usatechidxusd 1857 bar
+NQ=F hata <HTTPError 429: 'Too Many Requests'>
+GC=F hata <HTTPError 429: 'Too Many Requests'>
+binance-xauusdt 5184 bar
+bitti
