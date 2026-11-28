@@ -1,0 +1,52 @@
+2025 1 hata <HTTPError 404: 'Not Found'>
+2025 2 hata <HTTPError 404: 'Not Found'>
+2025 3 hata <HTTPError 404: 'Not Found'>
+2025 4 hata <HTTPError 404: 'Not Found'>
+2025 5 hata <HTTPError 404: 'Not Found'>
+2025 6 hata <HTTPError 404: 'Not Found'>
+2025 7 hata <HTTPError 404: 'Not Found'>
+2025 8 hata <HTTPError 404: 'Not Found'>
+2025 9 hata <HTTPError 404: 'Not Found'>
+2025 10 hata <HTTPError 404: 'Not Found'>
+2025 11 hata <HTTPError 404: 'Not Found'>
+2025 12 ok 29755
+2025 kaydedildi 29755
+2026 1 ok 44640
+2026 2 ok 40320
+2026 3 ok 44640
+2026 4 ok 43200
+2026 5 ok 44640
+2026 6 ok 43200
+2026 7 ok 44640
+2026 8 ok 44640
+2026 9 ok 43200
+2026 10 ok 44640
+2026-11 1 ok 1440
+2026-11 2 ok 1440
+2026-11 3 ok 1440
+2026-11 4 ok 1440
+2026-11 5 ok 1440
+2026-11 6 ok 1440
+2026-11 7 ok 1440
+2026-11 8 ok 1440
+2026-11 9 ok 1440
+2026-11 10 ok 1440
+2026-11 11 ok 1440
+2026-11 12 ok 1440
+2026-11 13 ok 1440
+2026-11 14 ok 1440
+2026-11 15 ok 1440
+2026-11 16 ok 1440
+2026-11 17 ok 1440
+2026-11 18 ok 1440
+2026-11 19 ok 1440
+2026-11 20 ok 1440
+2026-11 21 ok 1440
+2026-11 22 ok 1440
+2026-11 23 ok 1440
+2026-11 24 ok 1440
+2026-11 25 ok 1440
+2026-11 26 ok 1440
+2026-11 27 ok 1440
+2026 kaydedildi 476640
+bitti
